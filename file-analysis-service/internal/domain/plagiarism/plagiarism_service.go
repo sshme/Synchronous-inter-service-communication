@@ -10,8 +10,8 @@ import (
 	"fileanalysisservice/internal/interfaces/repository"
 )
 
-// PlagiarismService handles plagiarism detection logic
-type PlagiarismService struct {
+// Service handles plagiarism detection logic
+type Service struct {
 	textProcessor      *TextProcessor
 	analysisRepository repository.AnalysisRepository
 	shingleRepository  repository.ShingleRepository
@@ -19,8 +19,8 @@ type PlagiarismService struct {
 }
 
 // NewPlagiarismService creates a new plagiarism service
-func NewPlagiarismService(analysisRepository repository.AnalysisRepository, shingleRepository repository.ShingleRepository) *PlagiarismService {
-	return &PlagiarismService{
+func NewPlagiarismService(analysisRepository repository.AnalysisRepository, shingleRepository repository.ShingleRepository) *Service {
+	return &Service{
 		textProcessor:      NewTextProcessor(),
 		analysisRepository: analysisRepository,
 		shingleRepository:  shingleRepository,
@@ -29,7 +29,7 @@ func NewPlagiarismService(analysisRepository repository.AnalysisRepository, shin
 }
 
 // AnalyzePlagiarism performs plagiarism analysis on the given text
-func (ps *PlagiarismService) AnalyzePlagiarism(ctx context.Context, text string, currentFileID string) (*analysis.PlagiarismReport, error) {
+func (ps *Service) AnalyzePlagiarism(ctx context.Context, text string, currentFileID string) (*analysis.PlagiarismReport, error) {
 	log.Printf("Starting plagiarism analysis for file %s", currentFileID)
 
 	processedText := ps.textProcessor.ProcessText(text)
@@ -86,7 +86,7 @@ func (ps *PlagiarismService) AnalyzePlagiarism(ctx context.Context, text string,
 }
 
 // storeShingles stores shingles for the current file
-func (ps *PlagiarismService) storeShingles(ctx context.Context, fileID string, shingles []string, hashes []string) error {
+func (ps *Service) storeShingles(ctx context.Context, fileID string, shingles []string, hashes []string) error {
 	if len(shingles) != len(hashes) {
 		return fmt.Errorf("shingles and hashes length mismatch")
 	}
@@ -105,7 +105,7 @@ func (ps *PlagiarismService) storeShingles(ctx context.Context, fileID string, s
 }
 
 // findMatches searches for plagiarism matches in the database
-func (ps *PlagiarismService) findMatches(ctx context.Context, currentHashes []string, currentFileID string) ([]analysis.PlagiarismMatch, error) {
+func (ps *Service) findMatches(ctx context.Context, currentHashes []string, currentFileID string) ([]analysis.PlagiarismMatch, error) {
 	dbMatches, err := ps.shingleRepository.FindMatchingShingles(ctx, currentHashes, currentFileID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query database for matches: %w", err)
@@ -164,7 +164,7 @@ func (ps *PlagiarismService) findMatches(ctx context.Context, currentHashes []st
 }
 
 // calculateUniqueShingles calculates the number of unique shingles
-func (ps *PlagiarismService) calculateUniqueShingles(currentHashes map[string]bool, matches []analysis.PlagiarismMatch) int {
+func (ps *Service) calculateUniqueShingles(currentHashes map[string]bool, matches []analysis.PlagiarismMatch) int {
 	totalHashes := len(currentHashes)
 
 	matchedHashes := 0
@@ -186,7 +186,7 @@ func (ps *PlagiarismService) calculateUniqueShingles(currentHashes map[string]bo
 }
 
 // CalculateTextStatistics calculates text statistics
-func (ps *PlagiarismService) CalculateTextStatistics(text string) *analysis.TextStatistics {
+func (ps *Service) CalculateTextStatistics(text string) *analysis.TextStatistics {
 	stats := ps.textProcessor.CalculateTextStatistics(text)
 	return &analysis.TextStatistics{
 		ParagraphCount: stats.ParagraphCount,
@@ -197,7 +197,7 @@ func (ps *PlagiarismService) CalculateTextStatistics(text string) *analysis.Text
 }
 
 // SetShingleSize sets the size of shingles (n-grams) for analysis
-func (ps *PlagiarismService) SetShingleSize(size int) {
+func (ps *Service) SetShingleSize(size int) {
 	if size > 0 {
 		ps.shingleSize = size
 	}

@@ -23,7 +23,7 @@ type ContentAnalyserService struct {
 	fileStoringService *filestoringservice.FileStoringService
 	quickChartService  *quickchart.QuickChart
 	fileStorage        *s3.FileStorage
-	plagiarismService  *plagiarism.PlagiarismService
+	plagiarismService  *plagiarism.Service
 }
 
 // NewContentAnalyserService creates a new analysis service

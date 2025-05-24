@@ -16,18 +16,15 @@ func NewDB(cfg *config.Config) (*sql.DB, error) {
 		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBSSLMode,
 	)
 
-	// Open database connection
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}
 
-	// Check connection
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	// Create tables if they don't exist
 	if err := createTables(db); err != nil {
 		return nil, err
 	}
@@ -37,7 +34,6 @@ func NewDB(cfg *config.Config) (*sql.DB, error) {
 
 // createTables creates the necessary tables if they don't exist
 func createTables(db *sql.DB) error {
-	// Create files table
 	query := `
 		CREATE TABLE IF NOT EXISTS files (
 			id VARCHAR(255) PRIMARY KEY,

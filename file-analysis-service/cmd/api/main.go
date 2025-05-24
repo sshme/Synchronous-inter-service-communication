@@ -33,7 +33,6 @@ import (
 )
 
 func main() {
-	// Initialize the application
 	app, err := di.InitializeApplication()
 	if err != nil {
 		log.Fatalf("Failed to initialize application: %v", err)
@@ -44,11 +43,9 @@ func main() {
 		Handler: app.Router.SetupRoutes(),
 	}
 
-	// Channel for graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	// Start server in a goroutine
 	go func() {
 		log.Printf("Starting server on port %s", app.Config.ServerPort)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -56,15 +53,12 @@ func main() {
 		}
 	}()
 
-	// Wait for shutdown signal
 	<-quit
 	log.Println("Shutting down server...")
 
-	// Create context with timeout for shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Gracefully shutdown the server
 	if err := server.Shutdown(ctx); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
