@@ -1,0 +1,30 @@
+http:
+  routers:
+    dashboard:
+      rule: "PathPrefix(`/dashboard`)"
+      service: "api@internal"
+      middlewares:
+        - "cors-headers"
+
+    files-api:
+      rule: "PathPrefix(`/store-api`)"
+      service: "file-storing-service"
+      middlewares:
+        - "cors-headers"
+        
+    analysis-api:
+      rule: "PathPrefix(`/analysis-api`)"
+      service: "file-analysis-service"
+      middlewares:
+        - "cors-headers"
+
+  services:
+    file-storing-service:
+      loadBalancer:
+        servers:
+          - url: "http://file-storing-service:8000"
+    
+    file-analysis-service:
+      loadBalancer:
+        servers:
+          - url: "http://file-analysis-service:8001" 

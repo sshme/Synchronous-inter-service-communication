@@ -1,0 +1,109 @@
+basePath: /analysis-api
+definitions:
+  handler.ErrorResponse:
+    properties:
+      code:
+        example: 404
+        type: integer
+      message:
+        example: File not found
+        type: string
+    type: object
+host: localhost
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.example.com/support
+  description: A service for uploading and retrieving files
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: File Analysing Service API
+  version: "1.0"
+paths:
+  /analysis/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get analysis details for a specific file by its ID
+      parameters:
+      - description: File ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Analysis details
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request - File ID is required
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found - Analysis not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error - Failed to get analysis
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Retrieve file analysis
+      tags:
+      - analysis
+  /analysis/{id}/download:
+    get:
+      description: Download the actual analysis cloud image by its ID
+      parameters:
+      - description: Analysis ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: Analysis image
+          schema:
+            type: analysis
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Analysis not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Download a cloud image by ID
+      tags:
+      - analysis
+  /info/health:
+    get:
+      description: Check if the service is up and running
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Health check endpoint
+      tags:
+      - health
+produces:
+- application/json
+schemes:
+- http
+- https
+swagger: "2.0"

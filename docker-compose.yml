@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v3.4
+    container_name: traefik
+    ports:
+      - "80:80"     # HTTP
+      - "8080:8080" # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./api-gateway/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./api-gateway/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      - microservices_network
+    restart: unless-stopped
+
+  s3mock:
+    image: adobe/s3mock:latest
+    container_name: s3mock
+    ports:
+      - "9090:9090"   # HTTP port
+      - "9191:9191"   # HTTPS port (optional)
+    environment:
+      - initialBuckets=files,words_cluster_images
+      - debug=true
+      - root=/s3mock-data
+      - retainFilesOnExit=true
+    volumes:
+      - s3mock_data:/s3mock-data
+    networks:
+      - microservices_network
+    restart: unless-stopped
+
+  s3mock-init:
+    build: ./s3mock-init
+    container_name: s3mock-init
+    depends_on:
+      - s3mock
+    networks:
+      - microservices_network
+    restart: "no"
+
+  file-storing-service:
+    build: ./file-storing-service
+    container_name: file-storing-service
+    env_file:
+      - ./s3mock-init/config.env
+    networks:
+      - microservices_network
+    depends_on:
+      - file-db
+      - s3mock
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.file-storing.loadbalancer.server.port=8000"
+    restart: unless-stopped
+
+  file-analysis-service:
+    build: ./file-analysis-service
+    container_name: file-analysis-service
+    networks:
+      - microservices_network
+    depends_on:
+      - analysis-db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.file-analysis.loadbalancer.server.port=8001"
+    restart: unless-stopped
+
+  file-db:
+    image: postgres:15-alpine
+    container_name: file-db
+    environment:
+      POSTGRES_DB: files_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - file_db_data:/var/lib/postgresql/data
+    networks:
+      - microservices_network
+    restart: unless-stopped
+
+  analysis-db:
+    image: postgres:15-alpine
+    container_name: analysis-db
+    environment:
+      POSTGRES_DB: analysis_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - analysis_db_data:/var/lib/postgresql/data
+    networks:
+      - microservices_network
+    restart: unless-stopped
+
+networks:
+  microservices_network:
+    driver: bridge
+
+volumes:
+  file_db_data:
+  analysis_db_data:
+  s3mock_data:

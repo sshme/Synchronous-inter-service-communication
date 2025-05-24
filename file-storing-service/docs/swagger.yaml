@@ -1,0 +1,180 @@
+basePath: /store-api
+definitions:
+  handler.ErrorResponse:
+    properties:
+      code:
+        example: 404
+        type: integer
+      message:
+        example: File not found
+        type: string
+    type: object
+  handler.FileResponse:
+    properties:
+      content_type:
+        example: application/pdf
+        type: string
+      hash:
+        type: string
+      id:
+        example: 12345678-1234-1234-1234-123456789012
+        type: string
+      location:
+        example: files/12345678-1234-1234-1234-123456789012
+        type: string
+      name:
+        example: document.pdf
+        type: string
+      size:
+        example: 1048576
+        type: integer
+      uploaded_at:
+        example: "2023-01-01T12:00:00Z"
+        type: string
+    type: object
+host: localhost
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.example.com/support
+  description: A service for uploading and retrieving files
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: File Storing Service API
+  version: "1.0"
+paths:
+  /files:
+    get:
+      consumes:
+      - application/json
+      description: Get information for all uploaded files
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of all files
+          schema:
+            items:
+              $ref: '#/definitions/handler.FileResponse'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Get all files
+      tags:
+      - files
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a new file to the server
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: File uploaded successfully
+          schema:
+            $ref: '#/definitions/handler.FileResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Upload a file
+      tags:
+      - files
+  /files/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get file information by its ID
+      parameters:
+      - description: File ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: File information
+          schema:
+            $ref: '#/definitions/handler.FileResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: File not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Get a file by ID
+      tags:
+      - files
+  /files/{id}/download:
+    get:
+      description: Download the actual file content by its ID
+      parameters:
+      - description: File ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: File content
+          schema:
+            type: file
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: File not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Download a file by ID
+      tags:
+      - files
+  /info/health:
+    get:
+      description: Check if the service is up and running
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Health check endpoint
+      tags:
+      - health
+produces:
+- application/json
+schemes:
+- http
+- https
+swagger: "2.0"
